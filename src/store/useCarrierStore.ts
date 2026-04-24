@@ -44,7 +44,7 @@ export const useCarrierStore = create<CarrierState>()(
       frequency: defaultPreset.frequency,
       depth: 0.6,
       volume: 0.5,
-      source: 'brown-noise',
+      source: 'ambient',
       uploadName: null,
       selectedPresetId: DEFAULT_PRESET_ID,
       savedPresets: [],

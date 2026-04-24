@@ -1,4 +1,4 @@
-export type SourceKind = 'brown-noise' | 'upload';
+export type SourceKind = 'ambient' | 'brown-noise' | 'upload';
 
 export interface AudioSettings {
   frequency: number;

@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { Upload, Waves } from 'lucide-react';
+import { Leaf, Upload, Waves } from 'lucide-react';
+import type { SourceKind } from '@/audio/types';
 import { useCarrierStore } from '@/store/useCarrierStore';
 import { cn } from '@/lib/cn';
 
@@ -7,6 +8,17 @@ interface SourcePickerProps {
   uploadName: string | null;
   onUpload: (file: File) => Promise<void>;
 }
+
+interface SourceOption {
+  kind: Exclude<SourceKind, 'upload'>;
+  label: string;
+  Icon: typeof Leaf;
+}
+
+const BUILT_IN_SOURCES: SourceOption[] = [
+  { kind: 'ambient', label: 'Ambient', Icon: Leaf },
+  { kind: 'brown-noise', label: 'Noise', Icon: Waves },
+];
 
 export function SourcePicker({ uploadName, onUpload }: SourcePickerProps) {
   const source = useCarrierStore((s) => s.source);
@@ -24,24 +36,30 @@ export function SourcePicker({ uploadName, onUpload }: SourcePickerProps) {
     }
   };
 
+  const buttonClass = (active: boolean) =>
+    cn(
+      'flex items-center justify-center gap-2 rounded-lg border px-2 py-3 text-sm transition-colors',
+      active
+        ? 'border-accent/70 bg-accent/15 text-ink'
+        : 'border-bg-border bg-bg-panel/60 text-ink-muted hover:border-accent/40 hover:text-ink',
+    );
+
   return (
     <div className="space-y-2">
       <span className="font-mono text-xs uppercase tracking-[0.18em] text-ink-muted">Source</span>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setSource('brown-noise')}
-          aria-pressed={source === 'brown-noise'}
-          className={cn(
-            'flex items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm transition-colors',
-            source === 'brown-noise'
-              ? 'border-accent/70 bg-accent/15 text-ink'
-              : 'border-bg-border bg-bg-panel/60 text-ink-muted hover:border-accent/40 hover:text-ink',
-          )}
-        >
-          <Waves className="h-4 w-4" />
-          Brown noise
-        </button>
+      <div className="grid grid-cols-3 gap-2">
+        {BUILT_IN_SOURCES.map(({ kind, label, Icon }) => (
+          <button
+            key={kind}
+            type="button"
+            onClick={() => setSource(kind)}
+            aria-pressed={source === kind}
+            className={buttonClass(source === kind)}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
         <button
           type="button"
           onClick={() => {
@@ -52,17 +70,17 @@ export function SourcePicker({ uploadName, onUpload }: SourcePickerProps) {
             }
           }}
           aria-pressed={source === 'upload'}
-          className={cn(
-            'flex items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm transition-colors',
-            source === 'upload'
-              ? 'border-accent/70 bg-accent/15 text-ink'
-              : 'border-bg-border bg-bg-panel/60 text-ink-muted hover:border-accent/40 hover:text-ink',
-          )}
+          className={buttonClass(source === 'upload')}
         >
           <Upload className="h-4 w-4" />
-          {uploadName ? 'Your audio' : 'Upload'}
+          {uploadName ? 'Yours' : 'Upload'}
         </button>
       </div>
+      {source === 'ambient' && (
+        <p className="text-xs leading-relaxed text-ink-dim">
+          Warm procedural pad — detuned sines in an open A-major voicing, slow amplitude drift. Modulated at your chosen frequency.
+        </p>
+      )}
       {uploadName && (
         <div className="flex items-center justify-between rounded-md border border-bg-border bg-bg-panel/40 px-3 py-2 text-xs">
           <span className="truncate font-mono text-ink-muted">{uploadName}</span>
