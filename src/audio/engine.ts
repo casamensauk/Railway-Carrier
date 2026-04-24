@@ -1,3 +1,4 @@
+import { createAmbientPadBuffer } from './ambientPad';
 import { createBrownNoiseBuffer } from './brownNoise';
 import type { SourceKind } from './types';
 
@@ -18,8 +19,9 @@ export class AudioEngine {
   private modGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
   private brownNoiseBuffer: AudioBuffer | null = null;
+  private ambientPadBuffer: AudioBuffer | null = null;
   private uploadedBuffer: AudioBuffer | null = null;
-  private currentSource: SourceKind = 'brown-noise';
+  private currentSource: SourceKind = 'ambient';
   private isPlaying = false;
   private fadeTimeout: number | null = null;
 
@@ -79,6 +81,11 @@ export class AudioEngine {
         throw new Error('No uploaded audio available.');
       }
       buffer = this.uploadedBuffer;
+    } else if (source === 'ambient') {
+      if (!this.ambientPadBuffer) {
+        this.ambientPadBuffer = createAmbientPadBuffer(ctx);
+      }
+      buffer = this.ambientPadBuffer;
     } else {
       if (!this.brownNoiseBuffer) {
         this.brownNoiseBuffer = createBrownNoiseBuffer(ctx, 10);
