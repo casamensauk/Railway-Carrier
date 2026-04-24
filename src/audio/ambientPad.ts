@@ -21,22 +21,26 @@ export function createAmbientPadBuffer(ctx: AudioContext): AudioBuffer {
   const sampleRate = ctx.sampleRate;
   const length = Math.floor(sampleRate * DURATION_SECONDS);
   const buffer = ctx.createBuffer(2, length, sampleRate);
+  const twoPi = 2 * Math.PI;
+  const lfoStep = (twoPi * LFO_FREQ) / sampleRate;
 
   for (let ch = 0; ch < 2; ch++) {
     const data = buffer.getChannelData(ch);
     const channelSign = ch === 0 ? -1 : 1;
     const phaseOffset = ch === 0 ? 0 : 0.3;
+    const channelVoices = VOICES.map((v) => ({
+      step: (twoPi * v.freq) / sampleRate,
+      gain: v.gain * (1 + v.pan * channelSign * 0.5),
+    }));
 
     for (let i = 0; i < length; i++) {
-      const t = i / sampleRate;
       let sample = 0;
 
-      for (const v of VOICES) {
-        const panFactor = 1 + v.pan * channelSign * 0.5;
-        sample += Math.sin(2 * Math.PI * v.freq * t) * v.gain * panFactor;
+      for (const v of channelVoices) {
+        sample += Math.sin(v.step * i) * v.gain;
       }
 
-      const drift = 0.85 + 0.15 * Math.sin(2 * Math.PI * LFO_FREQ * t + phaseOffset);
+      const drift = 0.85 + 0.15 * Math.sin(lfoStep * i + phaseOffset);
       sample *= drift * 0.55;
 
       data[i] = Math.max(-0.95, Math.min(0.95, sample));
